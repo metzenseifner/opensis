@@ -1,0 +1,11 @@
+[package]
+name = "opensis"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+control = "1.0.0"
+dashmap = "6.2.1"
+protocol = "3.4.0"
+pyo3 = "0.29.0"
+winnow = "1.0.3"
