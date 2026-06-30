@@ -1,2 +1,2 @@
-pub mod python_binding;
+pub mod devices;
 mod recorder;
