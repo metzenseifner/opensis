@@ -23,7 +23,7 @@ use winnow::error::{ContextError, ErrMode};
 use winnow::token::{literal, one_of, take_while};
 use winnow::{ModalResult, Parser, Partial};
 
-use crate::recorder::states::RecordingState;
+use crate::recorder::protocol::states::RecordingState;
 
 /// A decoded response value. The variant reflects what the field means, so a
 /// caller can pattern-match instead of re-parsing a string.
