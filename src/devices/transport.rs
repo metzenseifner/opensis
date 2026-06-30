@@ -44,3 +44,6 @@ pub trait Transport: Send {
 
 #[cfg(any(test, feature = "testing"))]
 pub mod fake;
+
+#[cfg(feature = "ssh")]
+pub mod ssh;

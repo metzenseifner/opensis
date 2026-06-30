@@ -1,2 +1,2 @@
 pub mod devices;
-mod recorder;
+pub mod recorder;
