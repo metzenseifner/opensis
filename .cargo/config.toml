@@ -1,0 +1,9 @@
+# Building the pyo3 `extension-module` cdylib resolves CPython symbols at load
+# time, so the linker must be told to leave them undefined. maturin sets this
+# automatically; this config lets a plain `cargo build --features python` link
+# too. It is harmless for the default (no-python) builds and the test binaries.
+[target.aarch64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
+
+[target.x86_64-apple-darwin]
+rustflags = ["-C", "link-arg=-undefined", "-C", "link-arg=dynamic_lookup"]
