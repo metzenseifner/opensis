@@ -3,7 +3,7 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "opensis"
+name = "sismatic"
 # Single source of truth is Cargo.toml; maturin reads it because of `dynamic`.
 dynamic = ["version"]
 description = "Blocking Python facade for driving Extron SIS devices over SSH"

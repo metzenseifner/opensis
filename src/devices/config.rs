@@ -368,7 +368,7 @@ command_secs = 3
     #[test]
     fn load_reads_from_disk() {
         let path =
-            std::env::temp_dir().join(format!("opensis-devices-{}.toml", std::process::id()));
+            std::env::temp_dir().join(format!("sismatic-devices-{}.toml", std::process::id()));
         std::fs::write(&path, USER_EXAMPLE).unwrap();
         let devices = load(&path).unwrap();
         std::fs::remove_file(&path).ok();

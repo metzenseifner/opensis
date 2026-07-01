@@ -152,7 +152,7 @@ host = "10.9.40.12"
     #[test]
     fn load_builds_from_a_file() {
         let path =
-            std::env::temp_dir().join(format!("opensis-registry-{}.toml", std::process::id()));
+            std::env::temp_dir().join(format!("sismatic-registry-{}.toml", std::process::id()));
         std::fs::write(&path, EXAMPLE).unwrap();
         let connector = Arc::new(CountingConnector::new(FakeTransport::new));
         let registry = Registry::load(&path, connector).unwrap();

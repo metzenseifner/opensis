@@ -1,6 +1,6 @@
 //! The blocking Python facade.
 //!
-//! Python callers see one class, [`Sis`], built from a `devices.toml`. It owns a
+//! Python callers see one class, [`Sismatic`], built from a `devices.toml`. It owns a
 //! tokio runtime and the device [`Registry`] (over the real SSH connector), and
 //! exposes plain blocking methods: name an instruction as a string, name the
 //! target device, get a native Python value back. The async machinery and the
@@ -27,14 +27,14 @@ use crate::protocol::instructions::query::Query;
 use crate::protocol::instructions::register::Register;
 
 /// A pool of Extron devices, addressable from Python by id.
-#[pyclass]
-struct Sis {
+#[pyclass(name = "Sis")]
+struct Sismatic {
     runtime: Runtime,
     registry: Registry,
 }
 
 #[pymethods]
-impl Sis {
+impl Sismatic {
     /// Build a session from a `devices.toml`, opening no connections yet (each
     /// device connects lazily on its first command).
     #[staticmethod]
@@ -77,7 +77,7 @@ impl Sis {
     }
 }
 
-impl Sis {
+impl Sismatic {
     /// Look up `device`, run `instruction` to completion on the runtime, and turn
     /// the decoded value into a native Python object. The GIL is released for the
     /// duration of the (blocking) device exchange.
@@ -112,9 +112,9 @@ fn value_into_py(py: Python<'_>, value: Value) -> PyResult<Py<PyAny>> {
     }
 }
 
-/// The `opensis` Python extension module.
+/// The `sismatic` Python extension module.
 #[pymodule]
-fn opensis(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_class::<Sis>()?;
+fn sismatic(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_class::<Sismatic>()?;
     Ok(())
 }

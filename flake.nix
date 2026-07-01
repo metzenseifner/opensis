@@ -182,7 +182,7 @@
           # links against the host libc. This output is for `nix build`-based
           # dev and reproducibility.
           wheel = pkgs.stdenv.mkDerivation {
-            pname = "opensis-wheel";
+            pname = "sismatic-wheel";
             inherit (my-crate) version;
             src = pythonSrc;
 
@@ -241,7 +241,7 @@
           # rust toolchain, maturin, cmake (for aws-lc-sys) and perl are all
           # pinned by the flake.
           build-wheel = pkgs.writeShellApplication {
-            name = "opensis-build-wheel";
+            name = "sismatic-build-wheel";
             runtimeInputs = [
               (rustToolchain pkgs)
               pkgs.maturin
@@ -264,7 +264,7 @@
 
           # `nix run .#build-sdist` — the source distribution for the release.
           build-sdist = pkgs.writeShellApplication {
-            name = "opensis-build-sdist";
+            name = "sismatic-build-sdist";
             runtimeInputs = [ pkgs.maturin ];
             text = ''
               exec maturin sdist --out dist "$@"
@@ -356,7 +356,7 @@
 
           packages = {
             default = my-crate;
-            # `nix build .#wheel` -> result/opensis-*.whl
+            # `nix build .#wheel` -> result/sismatic-*.whl
             inherit wheel;
           };
 

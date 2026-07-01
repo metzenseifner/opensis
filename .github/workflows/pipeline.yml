@@ -131,7 +131,7 @@ jobs:
           find artifacts -type f \( -name '*.whl' -o -name '*.tar.gz' \) \
             -exec cp -n {} release/ \;
           if [ -d artifacts/crate ]; then
-            tar -czf "release/opensis-crate-${GITHUB_REF_NAME}.tar.gz" \
+            tar -czf "release/sismatic-crate-${GITHUB_REF_NAME}.tar.gz" \
               -C artifacts/crate .
           fi
           ls -l release

@@ -1,5 +1,5 @@
 [package]
-name = "opensis"
+name = "sismatic"
 version = "0.1.0"
 edition = "2024"
 description = "Blocking Python facade for driving Extron SIS devices over SSH"

@@ -12,11 +12,11 @@
 
 use std::sync::Arc;
 
-use opensis::devices::config;
-use opensis::devices::registry::Registry;
-use opensis::devices::transport::ssh::RusshConnector;
-use opensis::recorder::protocol::Value;
-use opensis::recorder::protocol::instructions::query::Query;
+use sismatic::devices::config;
+use sismatic::devices::registry::Registry;
+use sismatic::devices::transport::ssh::RusshConnector;
+use sismatic::recorder::protocol::Value;
+use sismatic::recorder::protocol::instructions::query::Query;
 
 /// Returns the device credentials, or `None` if the test should be skipped.
 fn device_from_env() -> Option<(String, String, String)> {
