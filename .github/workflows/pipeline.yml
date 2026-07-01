@@ -1,0 +1,142 @@
+name: Build & Release
+
+# Every step below is defined in flake.nix and runs identically on a laptop:
+#   nix flake check          # fmt, clippy, tests, audit, deny, coverage
+#   nix build .#             # the crate
+#   nix build .#wheel        # hermetic (nixpkgs-linked) wheel
+#   nix run .#build-wheel    # portable wheel (manylinux_2_28 via zig on Linux)
+#   nix run .#build-sdist    # source distribution
+# This workflow is only a dispatcher: it installs Nix (./.github/actions/nix)
+# and invokes those outputs. No build logic lives here.
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Supersede in-flight PR runs on a new push; never cancel main/tag builds
+# (those may be producing a release).
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  # nix flake check + the crate build — the whole validation suite, all from
+  # the flake. Uses default features, so aws-lc-sys is not compiled here.
+  checks:
+    name: Checks + crate
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/nix
+
+      - name: nix flake check
+        run: nix flake check --print-build-logs
+
+      - name: Build crate
+        run: nix build .# --out-link result-crate --print-build-logs
+
+      - name: Stage crate
+        run: |
+          mkdir -p out/crate
+          cp -Lr result-crate/. out/crate/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: crate
+          path: out/crate/**
+          if-no-files-found: error
+
+  # Portable wheels: one native runner per platform, each running the same
+  # `nix run .#build-wheel`. The cargo cache below keeps repeat runs from
+  # recompiling aws-lc-sys (pulled in by russh) from scratch.
+  wheels:
+    name: Wheel ${{ matrix.runner }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        # ubuntu = x86_64 linux, macos-15-intel = x86_64 macOS,
+        # macos-14 = aarch64 macOS.
+        runner: [ubuntu-latest, macos-15-intel, macos-14]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/nix
+
+      # Nix caches the toolchain/maturin/zig/cmake; this caches the *cargo*
+      # build (crates + target/), so aws-lc-sys is only compiled once per
+      # platform+lockfile. Keyed by runner (not runner.os) to keep the two
+      # macOS archs separate.
+      - name: Cache cargo build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+            target
+          key: wheel-cargo-${{ matrix.runner }}-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: |
+            wheel-cargo-${{ matrix.runner }}-
+
+      - name: Build portable wheel
+        run: nix run .#build-wheel
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wheel-${{ matrix.runner }}
+          path: dist/*.whl
+          if-no-files-found: error
+
+  sdist:
+    name: Source distribution
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/nix
+
+      - name: Build sdist
+        run: nix run .#build-sdist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sdist
+          path: dist/*.tar.gz
+          if-no-files-found: error
+
+  # On a v* tag, gather every artifact and attach it to a GitHub Release.
+  release:
+    name: GitHub Release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [checks, wheels, sdist]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          find artifacts -type f \( -name '*.whl' -o -name '*.tar.gz' \) \
+            -exec cp -n {} release/ \;
+          if [ -d artifacts/crate ]; then
+            tar -czf "release/opensis-crate-${GITHUB_REF_NAME}.tar.gz" \
+              -C artifacts/crate .
+          fi
+          ls -l release
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: release/*
+          generate_release_notes: true
